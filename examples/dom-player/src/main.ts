@@ -1,10 +1,7 @@
 import { setup } from "@stategraph/core";
 import { bindEvent, mountActor, onSnapshot } from "@stategraph/dom";
 
-type PlayerEvent =
-  | { type: "PLAY" }
-  | { type: "PAUSE" }
-  | { type: "TOGGLE_MUTE" };
+type PlayerEvent = { type: "PLAY" } | { type: "PAUSE" } | { type: "TOGGLE_MUTE" };
 
 const playerMachine = setup<object, PlayerEvent>({}).createMachine({
   id: "player",

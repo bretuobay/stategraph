@@ -77,6 +77,9 @@ export function createTraceRecorder(
 
 function generateId(): string {
   // Minimal UUID-like ID without crypto dependency (fine for session IDs in tooling)
-  const hex = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  const hex = () =>
+    Math.floor(Math.random() * 0xffffffff)
+      .toString(16)
+      .padStart(8, "0");
   return `${hex()}-${hex().slice(0, 4)}-4${hex().slice(0, 3)}-${hex().slice(0, 4)}-${hex()}${hex().slice(0, 4)}`;
 }

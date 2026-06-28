@@ -1,8 +1,4 @@
-import {
-  SUPPORTED_MAJOR_VERSIONS,
-  type InspectTraceEvent,
-  type TraceEnvelope,
-} from "./schema";
+import { SUPPORTED_MAJOR_VERSIONS, type InspectTraceEvent, type TraceEnvelope } from "./schema";
 
 // ---------------------------------------------------------------------------
 // Errors

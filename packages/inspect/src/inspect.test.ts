@@ -302,10 +302,12 @@ describe("createDevtoolsBridge", () => {
     actor.stop();
 
     const eventMessages = messages.filter((m) => (m as { kind: string }).kind === "trace:event");
-    expect(eventMessages.every((m) => {
-      const msg = m as { kind: "trace:event"; event: { type: string } };
-      return msg.event.type === "@transition.fired";
-    })).toBe(true);
+    expect(
+      eventMessages.every((m) => {
+        const msg = m as { kind: "trace:event"; event: { type: string } };
+        return msg.event.type === "@transition.fired";
+      }),
+    ).toBe(true);
   });
 
   it("getLog returns accumulated envelope", () => {
@@ -440,9 +442,7 @@ describe("replayTrace", () => {
       Promise.resolve({ value: 999 }),
     );
 
-    expect(() =>
-      replayTrace(machine, envelope, { effects: { load: customEffect } }),
-    ).not.toThrow();
+    expect(() => replayTrace(machine, envelope, { effects: { load: customEffect } })).not.toThrow();
 
     originalActor.stop();
   });

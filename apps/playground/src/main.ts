@@ -29,10 +29,7 @@ interface CounterCtx {
   count: number;
 }
 
-type CounterEvent =
-  | { type: "INC" }
-  | { type: "DEC" }
-  | { type: "RESET" };
+type CounterEvent = { type: "INC" } | { type: "DEC" } | { type: "RESET" };
 
 const counterMachine = setup<CounterCtx, CounterEvent>({}).createMachine({
   id: "counter",

@@ -59,7 +59,8 @@ const sections: GuideSection[] = [
     body: `
       <p>Always use the <code>setup()</code> + <code>.createMachine()</code> dual-call pattern.
       Guards, actions, and effects are string references in the definition.</p>
-      ${code(`const machine = setup({
+      ${code(
+        `const machine = setup({
   guards: { isValid: ({ context }) => context.value.length > 0 },
   actions: { clear: assign(() => ({ error: null })) },
   effects: { submit: fromPromise(({ input }) => fetch(input.url)) },
@@ -72,7 +73,9 @@ const sections: GuideSection[] = [
     submitting: { invoke: { src: "submit", input: ({ context }) => ({ url: "/api" }), onDone: "done" } },
     done: { type: "final" },
   },
-});`, true)}
+});`,
+        true,
+      )}
     `,
   },
   {
@@ -82,13 +85,19 @@ const sections: GuideSection[] = [
       <p><strong>assign</strong> — the only way to update context. Produces a new partial object.</p>
       ${code(`assign<Ctx>(({ context }) => ({ count: context.count + 1 }))`, true)}
       <p><strong>fromPromise</strong> — async invocation with AbortSignal auto-cancel on exit.</p>
-      ${code(`fromPromise<Output, Input>(({ input, signal }) =>
-  fetch(input.url, { signal }).then(r => r.json()))`, true)}
+      ${code(
+        `fromPromise<Output, Input>(({ input, signal }) =>
+  fetch(input.url, { signal }).then(r => r.json()))`,
+        true,
+      )}
       <p><strong>fromCallback</strong> — subscribe-style effects with cleanup.</p>
-      ${code(`fromCallback(({ sendBack, receive }) => {
+      ${code(
+        `fromCallback(({ sendBack, receive }) => {
   const id = setInterval(() => sendBack({ type: "TICK" }), 1000);
   return () => clearInterval(id);
-})`, true)}
+})`,
+        true,
+      )}
       <p>Parameterised actions: <code>entry: [{ type: "toast", params: { message: "Saved!" } }]</code></p>
     `,
   },
@@ -97,7 +106,8 @@ const sections: GuideSection[] = [
     title: "5. Snapshots and Selectors",
     body: `
       <p>Every committed actor state is a <code>StateGraphSnapshot</code>:</p>
-      ${code(`interface StateGraphSnapshot<TContext, TEvent> {
+      ${code(
+        `interface StateGraphSnapshot<TContext, TEvent> {
   status: "idle" | "active" | "done" | "error" | "stopped";
   value: string | Record<string, StateValue>;  // nested for compound states
   context: Readonly<TContext>;
@@ -106,7 +116,9 @@ const sections: GuideSection[] = [
   transitions: ReadonlyArray<...>;
   children: Readonly<Record<string, ChildActorRef>>;
   error: unknown;
-}`, true)}
+}`,
+        true,
+      )}
       <p>Use <code>useSelector</code> (React) or <code>onSnapshot</code> (DOM) to derive UI values.</p>
     `,
   },
@@ -115,12 +127,18 @@ const sections: GuideSection[] = [
     title: "6. React and DOM Adapters",
     body: `
       <p><strong>React</strong></p>
-      ${code(`const { snapshot, send, actor } = useActor(machine);
-const count = useSelector(actor, s => s.context.count);`, true)}
+      ${code(
+        `const { snapshot, send, actor } = useActor(machine);
+const count = useSelector(actor, s => s.context.count);`,
+        true,
+      )}
       <p><strong>DOM</strong></p>
-      ${code(`const { actor } = mountActor(machine);
+      ${code(
+        `const { actor } = mountActor(machine);
 bindEvent(btn, "click", actor, { type: "SUBMIT" });
-onSnapshot(actor, snap => { el.textContent = String(snap.value); });`, true)}
+onSnapshot(actor, snap => { el.textContent = String(snap.value); });`,
+        true,
+      )}
     `,
   },
   {
@@ -128,14 +146,20 @@ onSnapshot(actor, snap => { el.textContent = String(snap.value); });`, true)}
     title: "7. Testing and Model Checking",
     body: `
       <p>Use <code>@stategraph/testing</code> for deterministic fixture actors:</p>
-      ${code(`import { createTestActor } from "@stategraph/testing";
+      ${code(
+        `import { createTestActor } from "@stategraph/testing";
 const actor = createTestActor(machine);
 actor.send({ type: "SUBMIT" });
-expect(actor.getSnapshot().value).toBe("submitting");`, true)}
+expect(actor.getSnapshot().value).toBe("submitting");`,
+        true,
+      )}
       <p>Use <code>@stategraph/model-check</code> for structural validation:</p>
-      ${code(`import { checkMachine } from "@stategraph/model-check";
+      ${code(
+        `import { checkMachine } from "@stategraph/model-check";
 const issues = checkMachine(machine.toIR());
-// unreachableStates, deadStates, deadTransitions, invalidTargets, nondeterminism`, true)}
+// unreachableStates, deadStates, deadTransitions, invalidTargets, nondeterminism`,
+        true,
+      )}
     `,
   },
   {
@@ -143,11 +167,14 @@ const issues = checkMachine(machine.toIR());
     title: "8. Trace and Replay",
     body: `
       <p>Record a live actor session and replay it deterministically:</p>
-      ${code(`import { createTraceRecorder, replayTrace } from "@stategraph/inspect";
+      ${code(
+        `import { createTraceRecorder, replayTrace } from "@stategraph/inspect";
 const recorder = createTraceRecorder(actor, { machineId: machine.id });
 actor.send({ type: "SUBMIT" });
 const result = replayTrace(machine, recorder.getEnvelope());
-console.log(result.snapshots.length);`, true)}
+console.log(result.snapshots.length);`,
+        true,
+      )}
       <p>Trace envelopes are JSON-serializable with schema version <code>1.0</code>.
       Import via <code>deserializeEnvelope</code>; the parser validates on load and
       rejects unknown major versions.</p>
@@ -218,8 +245,12 @@ for (const s of sections) {
   link.textContent = s.title;
   link.style.cssText =
     "display:block;padding:0.3rem 0.5rem;color:#0070f3;text-decoration:none;font-size:0.9rem;margin-bottom:0.25rem;border-radius:4px";
-  link.addEventListener("mouseenter", () => { link.style.background = "#f0f0f0"; });
-  link.addEventListener("mouseleave", () => { link.style.background = ""; });
+  link.addEventListener("mouseenter", () => {
+    link.style.background = "#f0f0f0";
+  });
+  link.addEventListener("mouseleave", () => {
+    link.style.background = "";
+  });
   nav.appendChild(link);
 
   // section

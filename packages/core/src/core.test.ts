@@ -324,8 +324,12 @@ describe("@stategraph/core — entry/exit ordering", () => {
     const log: string[] = [];
     const machine = setup({
       actions: {
-        logOuter: () => { log.push("outer"); },
-        logInner: () => { log.push("inner"); },
+        logOuter: () => {
+          log.push("outer");
+        },
+        logInner: () => {
+          log.push("inner");
+        },
       },
     }).createMachine({
       id: "entry-order",
@@ -347,8 +351,12 @@ describe("@stategraph/core — entry/exit ordering", () => {
     const log: string[] = [];
     const machine = setup({
       actions: {
-        onExit: () => { log.push("exit"); },
-        onEntry: () => { log.push("entry"); },
+        onExit: () => {
+          log.push("exit");
+        },
+        onEntry: () => {
+          log.push("entry");
+        },
       },
     }).createMachine({
       id: "exit-entry-order",
@@ -368,9 +376,15 @@ describe("@stategraph/core — entry/exit ordering", () => {
     const log: string[] = [];
     const machine = setup({
       actions: {
-        onExit:       () => { log.push("exit"); },
-        onTransition: () => { log.push("transition"); },
-        onEntry:      () => { log.push("entry"); },
+        onExit: () => {
+          log.push("exit");
+        },
+        onTransition: () => {
+          log.push("transition");
+        },
+        onEntry: () => {
+          log.push("entry");
+        },
       },
     }).createMachine({
       id: "tx-action-order",
@@ -395,8 +409,12 @@ describe("@stategraph/core — self-transitions", () => {
     const log: string[] = [];
     const machine = setup({
       actions: {
-        onExit:  () => { log.push("exit"); },
-        onEntry: () => { log.push("entry"); },
+        onExit: () => {
+          log.push("exit");
+        },
+        onEntry: () => {
+          log.push("entry");
+        },
       },
     }).createMachine({
       id: "self-internal",
@@ -421,8 +439,12 @@ describe("@stategraph/core — self-transitions", () => {
     const log: string[] = [];
     const machine = setup({
       actions: {
-        onExit:  () => { log.push("exit"); },
-        onEntry: () => { log.push("entry"); },
+        onExit: () => {
+          log.push("exit");
+        },
+        onEntry: () => {
+          log.push("entry");
+        },
       },
     }).createMachine({
       id: "self-reenter",
@@ -463,12 +485,12 @@ describe("@stategraph/core — history state restoration", () => {
     });
 
     const actor = createActor(machine).start();
-    actor.send({ type: "OPEN" });        // → dialog.page1
-    actor.send({ type: "NEXT" });        // → dialog.page2
-    actor.send({ type: "CLOSE" });       // → idle  (history saves dialog.page2)
+    actor.send({ type: "OPEN" }); // → dialog.page1
+    actor.send({ type: "NEXT" }); // → dialog.page2
+    actor.send({ type: "CLOSE" }); // → idle  (history saves dialog.page2)
     expect(actor.getSnapshot().value).toBe("idle");
 
-    actor.send({ type: "REOPEN" });      // → dialog.hist → should restore dialog.page2
+    actor.send({ type: "REOPEN" }); // → dialog.hist → should restore dialog.page2
     // page2 is nested inside dialog → stateValue produces a nested object
     expect(actor.getSnapshot().value).toEqual({ dialog: { page2: "page2" } });
   });
@@ -522,7 +544,9 @@ describe("@stategraph/core — child actor lifecycle", () => {
     const machine = setup({
       effects: {
         channel: fromCallback(({ receive }) => {
-          receive((event) => { received.push(event); });
+          receive((event) => {
+            received.push(event);
+          });
         }),
       },
     }).createMachine({
@@ -621,7 +645,7 @@ describe("@stategraph/core — compile-time type tests", () => {
 
     const actor = createActor(machine);
     expectTypeOf(actor).toMatchTypeOf<ActorRef<Ctx, Evt>>();
-    expectTypeOf<typeof actor["getSnapshot"]>().toBeFunction();
+    expectTypeOf<(typeof actor)["getSnapshot"]>().toBeFunction();
   });
 
   it("snapshot is StateGraphSnapshot typed to context and event", () => {

@@ -8,10 +8,7 @@ interface FormCtx {
   error: string | null;
 }
 
-type FormEvent =
-  | { type: "CHANGE"; value: string }
-  | { type: "SUBMIT" }
-  | { type: "RETRY" };
+type FormEvent = { type: "CHANGE"; value: string } | { type: "SUBMIT" } | { type: "RETRY" };
 
 const formMachine = setup({
   guards: {
@@ -25,16 +22,17 @@ const formMachine = setup({
     clearError: assign<FormCtx>(() => ({ error: null })),
   },
   effects: {
-    submitForm: fromPromise<{ value: string }, { ok: boolean }>(({ input }) =>
-      new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (input.value === "fail") {
-            reject(new Error("Submission failed"));
-          } else {
-            resolve({ ok: true });
-          }
-        }, 1000);
-      }),
+    submitForm: fromPromise<{ value: string }, { ok: boolean }>(
+      ({ input }) =>
+        new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (input.value === "fail") {
+              reject(new Error("Submission failed"));
+            } else {
+              resolve({ ok: true });
+            }
+          }, 1000);
+        }),
     ),
   },
 }).createMachine({

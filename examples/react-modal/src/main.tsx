@@ -27,7 +27,9 @@ function ModalApp(): React.JSX.Element {
     createElement(
       "button",
       {
-        onClick: () => { send({ type: "OPEN" }); },
+        onClick: () => {
+          send({ type: "OPEN" });
+        },
         disabled: isOpen,
       },
       "Open modal",
@@ -40,7 +42,11 @@ function ModalApp(): React.JSX.Element {
           createElement("p", null, "State: ", createElement("code", null, stateLabel)),
           createElement(
             "button",
-            { onClick: () => { send({ type: "CLOSE" }); } },
+            {
+              onClick: () => {
+                send({ type: "CLOSE" });
+              },
+            },
             "Close",
           ),
         )

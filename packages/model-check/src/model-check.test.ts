@@ -77,7 +77,17 @@ describe("INVALID_TARGET", () => {
       states: [baseState("test"), baseState("test.idle", { parent: "test", type: "atomic" })],
       transitions: [baseTx("test.idle", "PING", null)],
     });
-    const result = check(ir, { checks: { invalidTargets: true, unreachableStates: false, deadStates: false, deadTransitions: false, missingInitial: false, nondeterminism: false, effectsWithoutCancel: false } });
+    const result = check(ir, {
+      checks: {
+        invalidTargets: true,
+        unreachableStates: false,
+        deadStates: false,
+        deadTransitions: false,
+        missingInitial: false,
+        nondeterminism: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "INVALID_TARGET");
     expect(diag).toHaveLength(0);
   });
@@ -138,7 +148,17 @@ describe("MISSING_INITIAL", () => {
       ],
       transitions: [],
     });
-    const result = check(ir, { checks: { missingInitial: true, unreachableStates: false, deadStates: false, deadTransitions: false, invalidTargets: false, nondeterminism: false, effectsWithoutCancel: false } });
+    const result = check(ir, {
+      checks: {
+        missingInitial: true,
+        unreachableStates: false,
+        deadStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "MISSING_INITIAL");
     expect(diag).toHaveLength(0);
   });
@@ -187,7 +207,17 @@ describe("UNREACHABLE_STATE", () => {
       initial: "a",
       states: { a: { type: "final" } },
     });
-    const result = check(machine, { checks: { unreachableStates: true, deadStates: false, deadTransitions: false, invalidTargets: false, nondeterminism: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        unreachableStates: true,
+        deadStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const unreachable = result.diagnostics.filter((d) => d.code === "UNREACHABLE_STATE");
     expect(unreachable).toHaveLength(0);
   });
@@ -206,7 +236,17 @@ describe("UNREACHABLE_STATE", () => {
         },
       },
     });
-    const result = check(machine, { checks: { unreachableStates: true, deadStates: false, deadTransitions: false, invalidTargets: false, nondeterminism: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        unreachableStates: true,
+        deadStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const unreachable = result.diagnostics.filter((d) => d.code === "UNREACHABLE_STATE");
     expect(unreachable).toHaveLength(0);
   });
@@ -227,9 +267,7 @@ describe("DEAD_STATE", () => {
       },
     });
     const result = check(machine);
-    const diag = result.diagnostics.find(
-      (d) => d.code === "DEAD_STATE" && d.stateId === "m.stuck",
-    );
+    const diag = result.diagnostics.find((d) => d.code === "DEAD_STATE" && d.stateId === "m.stuck");
     expect(diag).toBeDefined();
     expect(diag?.severity).toBe("error");
     expect(result.passed).toBe(false);
@@ -244,7 +282,17 @@ describe("DEAD_STATE", () => {
         done: { type: "final" },
       },
     });
-    const result = check(machine, { checks: { deadStates: true, unreachableStates: false, deadTransitions: false, invalidTargets: false, nondeterminism: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        deadStates: true,
+        unreachableStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "DEAD_STATE");
     expect(diag).toHaveLength(0);
   });
@@ -258,7 +306,17 @@ describe("DEAD_STATE", () => {
         done: { type: "final" },
       },
     });
-    const result = check(machine, { checks: { deadStates: true, unreachableStates: false, deadTransitions: false, invalidTargets: false, nondeterminism: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        deadStates: true,
+        unreachableStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "DEAD_STATE");
     expect(diag).toHaveLength(0);
   });
@@ -314,7 +372,17 @@ describe("DEAD_TRANSITION", () => {
         err: { type: "final" },
       },
     });
-    const result = check(machine, { checks: { deadTransitions: true, unreachableStates: false, deadStates: false, invalidTargets: false, nondeterminism: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        deadTransitions: true,
+        unreachableStates: false,
+        deadStates: false,
+        invalidTargets: false,
+        nondeterminism: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "DEAD_TRANSITION");
     expect(diag).toHaveLength(0);
   });
@@ -368,7 +436,17 @@ describe("NONDETERMINISTIC_TRANSITION", () => {
         b: { type: "final" },
       },
     });
-    const result = check(machine, { checks: { nondeterminism: true, unreachableStates: false, deadStates: false, deadTransitions: false, invalidTargets: false, missingInitial: false, effectsWithoutCancel: false } });
+    const result = check(machine, {
+      checks: {
+        nondeterminism: true,
+        unreachableStates: false,
+        deadStates: false,
+        deadTransitions: false,
+        invalidTargets: false,
+        missingInitial: false,
+        effectsWithoutCancel: false,
+      },
+    });
     const diag = result.diagnostics.filter((d) => d.code === "NONDETERMINISTIC_TRANSITION");
     expect(diag).toHaveLength(0);
   });
@@ -571,7 +649,14 @@ describe("bounded BFS", () => {
         missingInitial: false,
         effectsWithoutCancel: false,
       },
-      bounded: { enabled: true, maxPathDepth: 100, maxStatesExplored: 10_000, maxTransitions: 100_000, maxCycleLength: 20, timeoutMs: 5_000 },
+      bounded: {
+        enabled: true,
+        maxPathDepth: 100,
+        maxStatesExplored: 10_000,
+        maxTransitions: 100_000,
+        maxCycleLength: 20,
+        timeoutMs: 5_000,
+      },
     });
     expect(result.stats.bounded).toBe(true);
     expect(result.stats.hitLimit).toBe(false);
@@ -597,7 +682,14 @@ describe("bounded BFS", () => {
         missingInitial: false,
         effectsWithoutCancel: false,
       },
-      bounded: { enabled: true, maxPathDepth: 1_000, maxStatesExplored: 1, maxTransitions: 1_000, maxCycleLength: 20, timeoutMs: 5_000 },
+      bounded: {
+        enabled: true,
+        maxPathDepth: 1_000,
+        maxStatesExplored: 1,
+        maxTransitions: 1_000,
+        maxCycleLength: 20,
+        timeoutMs: 5_000,
+      },
     });
     expect(result.stats.bounded).toBe(true);
     expect(result.stats.hitLimit).toBe(true);
@@ -622,7 +714,14 @@ describe("bounded BFS", () => {
         missingInitial: false,
         effectsWithoutCancel: false,
       },
-      bounded: { enabled: true, maxPathDepth: 1_000, maxStatesExplored: 10_000, maxTransitions: 1, maxCycleLength: 20, timeoutMs: 5_000 },
+      bounded: {
+        enabled: true,
+        maxPathDepth: 1_000,
+        maxStatesExplored: 10_000,
+        maxTransitions: 1,
+        maxCycleLength: 20,
+        timeoutMs: 5_000,
+      },
     });
     expect(result.stats.bounded).toBe(true);
     expect(result.stats.hitLimit).toBe(true);
@@ -647,7 +746,14 @@ describe("bounded BFS", () => {
         missingInitial: false,
         effectsWithoutCancel: false,
       },
-      bounded: { enabled: true, maxPathDepth: 0, maxStatesExplored: 10_000, maxTransitions: 10_000, maxCycleLength: 20, timeoutMs: 5_000 },
+      bounded: {
+        enabled: true,
+        maxPathDepth: 0,
+        maxStatesExplored: 10_000,
+        maxTransitions: 10_000,
+        maxCycleLength: 20,
+        timeoutMs: 5_000,
+      },
     });
     expect(result.stats.bounded).toBe(true);
     expect(result.stats.hitLimit).toBe(true);
@@ -663,7 +769,14 @@ describe("bounded BFS", () => {
       },
     });
     const result = check(machine, {
-      bounded: { enabled: true, maxPathDepth: 100, maxStatesExplored: 100, maxTransitions: 1000, maxCycleLength: 20, timeoutMs: 5000 },
+      bounded: {
+        enabled: true,
+        maxPathDepth: 100,
+        maxStatesExplored: 100,
+        maxTransitions: 1000,
+        maxCycleLength: 20,
+        timeoutMs: 5000,
+      },
     });
     expect(result.passed).toBe(true);
     expect(result.stats.bounded).toBe(true);

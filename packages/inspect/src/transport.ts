@@ -83,12 +83,7 @@ export function createDevtoolsBridge(
   actor: { inspect(listener: (event: TraceEvent) => void): () => void },
   options: DevtoolsBridgeOptions,
 ): DevtoolsBridge {
-  const {
-    channel,
-    machineId,
-    sendSnapshot = false,
-    filter,
-  } = options;
+  const { channel, machineId, sendSnapshot = false, filter } = options;
 
   const sessionId = options.sessionId ?? generateId();
   const createdAt = Date.now();
@@ -167,6 +162,9 @@ export function isBridgeMessage(value: unknown): value is BridgeMessage {
 // ---------------------------------------------------------------------------
 
 function generateId(): string {
-  const hex = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  const hex = () =>
+    Math.floor(Math.random() * 0xffffffff)
+      .toString(16)
+      .padStart(8, "0");
   return `${hex()}-${hex().slice(0, 4)}-4${hex().slice(0, 3)}-${hex().slice(0, 4)}-${hex()}${hex().slice(0, 4)}`;
 }

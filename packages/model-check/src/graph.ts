@@ -119,11 +119,7 @@ export function enterLeaves(stateId: string, graph: IrGraph, out: Set<string>): 
   }
 }
 
-export function isDescendantOrSelf(
-  stateId: string,
-  ancestorId: string,
-  graph: IrGraph,
-): boolean {
+export function isDescendantOrSelf(stateId: string, ancestorId: string, graph: IrGraph): boolean {
   let cur: string | null = stateId;
   while (cur !== null) {
     if (cur === ancestorId) return true;

@@ -107,9 +107,7 @@ function checkMissingInitial(graph: IrGraph): ModelCheckDiagnostic[] {
       continue;
     }
     const childIds = graph.children.get(state.id) ?? [];
-    const hasInitialChild = childIds.some(
-      (cId) => graph.stateById.get(cId)?.key === state.initial,
-    );
+    const hasInitialChild = childIds.some((cId) => graph.stateById.get(cId)?.key === state.initial);
     if (!hasInitialChild) {
       diagnostics.push({
         severity: "error",
@@ -319,10 +317,7 @@ function runBoundedBFS(graph: IrGraph, opts: BoundedOpts): BoundedResult {
   return { hitLimit, statesExplored: visited.size, transitionsExplored };
 }
 
-function getEnabledTransitions(
-  leaves: ReadonlySet<string>,
-  graph: IrGraph,
-): ResolvedTransition[] {
+function getEnabledTransitions(leaves: ReadonlySet<string>, graph: IrGraph): ResolvedTransition[] {
   const active = new Set<string>(leaves);
   for (const leaf of leaves) {
     let cur = graph.stateById.get(leaf)?.parent ?? null;

@@ -33,8 +33,7 @@ export interface MountedActor<TContext, TEvent extends StateGraphEvent> {
  * }))
  */
 export type StateEventOrMapper<TEvent extends StateGraphEvent> =
-  | TEvent
-  | ((domEvent: Event) => TEvent);
+  TEvent | ((domEvent: Event) => TEvent);
 
 // ---------------------------------------------------------------------------
 // mountActor
@@ -90,8 +89,7 @@ export function bindEvent<TEvent extends StateGraphEvent>(
   stateEvent: StateEventOrMapper<TEvent>,
 ): () => void {
   const handler = (domEvent: Event): void => {
-    const event =
-      typeof stateEvent === "function" ? stateEvent(domEvent) : stateEvent;
+    const event = typeof stateEvent === "function" ? stateEvent(domEvent) : stateEvent;
     actor.send(event);
   };
 

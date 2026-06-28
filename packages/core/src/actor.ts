@@ -206,9 +206,10 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
         // When target is newly entered (entryPath is non-empty), also run entry for its
         // initial descendants. For self-transitions and ancestor-targets entryPath is
         // empty, so we fall back to enterInitial (no extra entry actions).
-        const leaves = entryPath.length > 0
-          ? this.enterDescendants(targetId, event)
-          : this.enterInitial(targetId);
+        const leaves =
+          entryPath.length > 0
+            ? this.enterDescendants(targetId, event)
+            : this.enterInitial(targetId);
         for (const leaf of leaves) enteredLeaves.add(leaf);
       }
       fired.push({ source: source.id, target: targetId, eventType: event.type });
@@ -419,7 +420,9 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
       sendBack: (sendBackEvent: StateGraphEvent): void => this.send(sendBackEvent as TEvent),
       receive: (listener: (received: StateGraphEvent) => void): (() => void) => {
         receiveListeners.add(listener);
-        return () => { receiveListeners.delete(listener); };
+        return () => {
+          receiveListeners.delete(listener);
+        };
       },
       resolve: (output: unknown) => this.completeInvoke(id, output, invoke, true),
       reject: (error: unknown) => this.completeInvoke(id, error, invoke, false),

@@ -12,6 +12,8 @@ export type {
   AssignAction,
   ChildActorRef,
   EffectDefinition,
+  EffectCleanup,
+  EffectControls,
   EffectRef,
   GuardImplementation,
   GuardRef,

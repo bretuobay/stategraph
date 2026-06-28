@@ -1,10 +1,19 @@
 // @vitest-environment happy-dom
 
-import { createElement, act, type ReactElement } from "react";
+import { createElement, act, useEffect, type ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-import { assign, createActor, createMachine, fromCallback, setup } from "@stategraph/core";
+import {
+  assign,
+  createActor,
+  createMachine,
+  fromCallback,
+  setup,
+  type ActorRef,
+  type StateGraphSnapshot,
+} from "@stategraph/core";
+import { defineAdapterConformanceSuite } from "@stategraph/testing";
 import {
   StateGraphProvider,
   useActor,
@@ -37,6 +46,10 @@ function mount(element: ReactElement): MountedRoot {
     root.render(element);
   });
   return { root, element: container };
+}
+
+function stringifyStateValue(value: unknown): string {
+  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 afterEach(() => {
@@ -209,4 +222,76 @@ describe("@stategraph/react", () => {
       [FormEvent]
     >();
   });
+
+  type ConformanceEvent = { type: "NEXT" } | { type: "NOOP" };
+
+  const conformanceSuite = defineAdapterConformanceSuite<unknown, ConformanceEvent, Root>({
+    name: "react",
+    createMachine: () =>
+      createMachine<unknown, ConformanceEvent>({
+        id: "react-conformance",
+        initial: "idle",
+        states: {
+          idle: { on: { NEXT: { target: "done" }, NOOP: {} } },
+          done: { type: "final" },
+        },
+      }),
+    dispatchEvent: { type: "NEXT" },
+    noopEvent: { type: "NOOP" },
+    expectInitial: (snapshot) => expect(snapshot.value).toBe("idle"),
+    expectAfterDispatch: (snapshot) => expect(snapshot.value).toBe("done"),
+    mount: ({ machine, onSnapshot, selector, onSelected }) => {
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      let actor: ActorRef<unknown, ConformanceEvent> | null = null;
+      let latestSnapshot: StateGraphSnapshot<unknown, ConformanceEvent> | null = null;
+      let send: ((event: { type: "NEXT" } | { type: "NOOP" }) => void) | null = null;
+
+      function Component() {
+        const result = useActor(machine);
+        const selected = selector ? useSelector(result.actor, selector) : undefined;
+        actor = result.actor;
+        latestSnapshot = result.snapshot;
+        send = result.send;
+
+        useEffect(() => {
+          onSnapshot?.(result.snapshot);
+        }, [result.snapshot]);
+
+        useEffect(() => {
+          if (selector) onSelected?.(selected);
+        }, [selected]);
+
+        return createElement("output", null, stringifyStateValue(result.snapshot.value));
+      }
+
+      act(() => root.render(createElement(Component)));
+
+      let cleaned = false;
+      return {
+        actor: actor!,
+        handle: root,
+        send(event) {
+          act(() => send?.(event));
+        },
+        getSnapshot() {
+          if (!latestSnapshot) throw new Error("React conformance component did not render.");
+          return latestSnapshot;
+        },
+        cleanup() {
+          if (cleaned) return;
+          cleaned = true;
+          act(() => root.unmount());
+          container.remove();
+        },
+      };
+    },
+  });
+
+  for (const testCase of conformanceSuite.tests) {
+    it(`passes shared conformance: ${testCase.name}`, async () => {
+      await testCase.run();
+    });
+  }
 });

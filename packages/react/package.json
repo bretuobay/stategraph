@@ -45,6 +45,7 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@stategraph/testing": "workspace:*",
     "@types/react": "*",
     "@types/react-dom": "*",
     "happy-dom": "*",

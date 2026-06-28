@@ -45,6 +45,9 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "happy-dom": "*",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

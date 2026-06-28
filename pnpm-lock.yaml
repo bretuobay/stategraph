@@ -219,6 +219,10 @@ importers:
         version: 2.1.9(@types/node@22.20.0)(happy-dom@20.10.6)
 
   packages/inspect:
+    dependencies:
+      '@stategraph/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: 'catalog:'

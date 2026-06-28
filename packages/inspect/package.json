@@ -37,6 +37,9 @@
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist coverage"
   },
+  "dependencies": {
+    "@stategraph/core": "workspace:*"
+  },
   "devDependencies": {
     "tsup": "catalog:",
     "typescript": "catalog:",

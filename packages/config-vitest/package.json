@@ -1,0 +1,12 @@
+{
+  "name": "@stategraph/config-vitest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "peerDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

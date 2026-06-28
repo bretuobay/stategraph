@@ -1,0 +1,7 @@
+{
+  "name": "@stategraph/scxml",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Post-MVP SCXML interoperability stub for StateGraph TS."
+}

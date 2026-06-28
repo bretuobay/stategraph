@@ -1,0 +1,6 @@
+{
+  "extends": "../config-typescript/library.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}

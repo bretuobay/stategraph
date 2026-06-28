@@ -1,0 +1,11 @@
+{
+  "name": "@stategraph/config-typescript",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.json",
+    "./library": "./library.json",
+    "./app": "./app.json"
+  }
+}

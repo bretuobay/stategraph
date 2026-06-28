@@ -1,0 +1,7 @@
+{
+  "name": "@stategraph/solid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Post-MVP Solid adapter stub for StateGraph TS."
+}

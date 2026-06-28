@@ -1,0 +1,8 @@
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+research-papers/*.pdf
+*.timestamp-*.mjs
+*.md
+**/*.md

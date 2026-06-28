@@ -1,0 +1,7 @@
+{
+  "name": "@stategraph/angular",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Post-MVP Angular adapter stub for StateGraph TS."
+}

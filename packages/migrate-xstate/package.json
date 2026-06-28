@@ -1,0 +1,7 @@
+{
+  "name": "@stategraph/migrate-xstate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Post-MVP XState migration tooling stub for StateGraph TS."
+}

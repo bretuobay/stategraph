@@ -1,24 +1,24 @@
 # Core Runtime Tasks
 
-- [ ] Define public barrel exports for MVP core APIs.
-- [ ] Implement machine definition types, state node types, transition types, and ref types.
-- [ ] Implement `setup()` type-capture factory and `.createMachine()`.
-- [ ] Implement bare `createMachine(definition)` for untyped and migrated machines.
-- [ ] Implement machine validation for state shape, targets, initial states, refs, and unsupported constructs.
-- [ ] Implement state node registry, path IDs, parent/child relationships, and active configuration derivation.
-- [ ] Implement actor lifecycle with `start`, `stop`, `send`, `getSnapshot`, `subscribe`, `select`, and `inspect`.
-- [ ] Implement deterministic event queue and run-to-completion processing.
-- [ ] Implement transition selection for guarded, targetless, self, delayed, eventless, and prioritized transitions.
-- [ ] Implement atomic, compound, parallel, final, shallow history, and deep history state behavior.
-- [ ] Implement entry, exit, and transition action ordering.
-- [ ] Implement `assign()` with shallow merge and immutable context replacement.
-- [ ] Add dev-mode context mutation detection for guards, actions, and effects.
-- [ ] Implement `fromPromise`, `fromCallback`, and MVP `fromObservable` throwing stub.
-- [ ] Implement effect scheduling, cancellation on state exit, and actor-level `provide` overrides.
+- [x] Define public barrel exports for MVP core APIs.
+- [x] Implement machine definition types, state node types, transition types, and ref types.
+- [x] Implement `setup()` type-capture factory and `.createMachine()`.
+- [x] Implement bare `createMachine(definition)` for untyped and migrated machines.
+- [x] Implement machine validation for state shape, targets, initial states, refs, and unsupported constructs.
+- [x] Implement state node registry, path IDs, parent/child relationships, and active configuration derivation.
+- [x] Implement actor lifecycle with `start`, `stop`, `send`, `getSnapshot`, `subscribe`, `select`, and `inspect`.
+- [x] Implement deterministic event queue and run-to-completion processing.
+- [x] Implement transition selection for guarded, targetless, self, delayed, eventless, and prioritized transitions.
+- [x] Implement atomic, compound, parallel, final, shallow history, and deep history state behavior.
+- [x] Implement entry, exit, and transition action ordering.
+- [x] Implement `assign()` with shallow merge and immutable context replacement.
+- [x] Add dev-mode context mutation detection for guards, actions, and effects.
+- [x] Implement `fromPromise`, `fromCallback`, and MVP `fromObservable` throwing stub.
+- [x] Implement effect scheduling, cancellation on state exit, and actor-level `provide` overrides.
 - [ ] Implement child actor invocation lifecycle.
-- [ ] Implement ADR-004 snapshot creation and `changed` calculation.
-- [ ] Implement selector subscriptions with equality comparison.
-- [ ] Implement trace emission hooks consumed by `@stategraph/inspect`.
-- [ ] Implement serializable IR export with no executable code.
+- [x] Implement ADR-004 snapshot creation and `changed` calculation.
+- [x] Implement selector subscriptions with equality comparison.
+- [x] Implement trace emission hooks consumed by `@stategraph/inspect`.
+- [x] Implement serializable IR export with no executable code.
 - [ ] Add runtime conformance tests for every TRD §10.1 scenario.
 - [ ] Add compile-time type tests for event, context, guard, action, effect, selector, and actor inference.

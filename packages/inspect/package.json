@@ -33,7 +33,7 @@
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
-    "lint": "eslint .",
+    "lint": "eslint src tsup.config.ts",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist coverage"
   },

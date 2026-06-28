@@ -41,6 +41,8 @@
     "@stategraph/core": "workspace:*"
   },
   "devDependencies": {
+    "@stategraph/testing": "workspace:*",
+    "happy-dom": "*",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

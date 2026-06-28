@@ -208,6 +208,12 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@stategraph/testing':
+        specifier: workspace:*
+        version: link:../testing
+      happy-dom:
+        specifier: '*'
+        version: 20.10.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(postcss@8.5.16)(tsx@4.22.4)(typescript@5.9.3)

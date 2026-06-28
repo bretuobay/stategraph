@@ -105,34 +105,39 @@ export function parseTraceEnvelope(raw: unknown): TraceEnvelope {
     throw new UnsupportedSchemaVersionError(version, SUPPORTED_MAJOR_VERSIONS);
   }
 
-  if (typeof raw["sessionId"] !== "string" || !raw["sessionId"]) {
+  const sessionId = raw["sessionId"];
+  if (typeof sessionId !== "string" || !sessionId) {
     throw new InvalidTraceEnvelopeError(`"sessionId" must be a non-empty string`);
   }
-  if (typeof raw["machineId"] !== "string" || !raw["machineId"]) {
+  const machineId = raw["machineId"];
+  if (typeof machineId !== "string" || !machineId) {
     throw new InvalidTraceEnvelopeError(`"machineId" must be a non-empty string`);
   }
-  if (typeof raw["actorId"] !== "string" || !raw["actorId"]) {
+  const actorId = raw["actorId"];
+  if (typeof actorId !== "string" || !actorId) {
     throw new InvalidTraceEnvelopeError(`"actorId" must be a non-empty string`);
   }
-  if (typeof raw["createdAt"] !== "number") {
+  const createdAt = raw["createdAt"];
+  if (typeof createdAt !== "number") {
     throw new InvalidTraceEnvelopeError(`"createdAt" must be a number`);
   }
-  if (!Array.isArray(raw["events"])) {
+  const rawEvents = raw["events"];
+  if (!Array.isArray(rawEvents)) {
     throw new InvalidTraceEnvelopeError(`"events" must be an array`);
   }
 
   const events: InspectTraceEvent[] = [];
-  for (const item of raw["events"] as unknown[]) {
+  for (const item of rawEvents as unknown[]) {
     const narrowed = narrowTraceEvent(item);
     if (narrowed) events.push(narrowed);
   }
 
   return {
     schemaVersion: version,
-    sessionId: raw["sessionId"] as string,
-    machineId: raw["machineId"] as string,
-    actorId: raw["actorId"] as string,
-    createdAt: raw["createdAt"] as number,
+    sessionId,
+    machineId,
+    actorId,
+    createdAt,
     events,
   };
 }

@@ -14,9 +14,13 @@
   },
   "dependencies": {
     "@stategraph/core": "workspace:*",
-    "@stategraph/react": "workspace:*"
+    "@stategraph/react": "workspace:*",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

@@ -141,7 +141,19 @@ importers:
       '@stategraph/react':
         specifier: workspace:*
         version: link:../../packages/react
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.7
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@types/react':
+        specifier: '*'
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: '*'
+        version: 19.2.3(@types/react@19.2.17)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -160,7 +172,19 @@ importers:
       '@stategraph/react':
         specifier: workspace:*
         version: link:../../packages/react
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.7
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@types/react':
+        specifier: '*'
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: '*'
+        version: 19.2.3(@types/react@19.2.17)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

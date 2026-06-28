@@ -393,7 +393,7 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
   private startEffect(
     src: string,
     input: unknown,
-    event: TEvent,
+    _event: TEvent,
     stateId: string,
     invoke?: InvokeDef,
     fixedId?: string,

@@ -7,6 +7,11 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:playground": "pnpm --filter @stategraph/playground dev",
+    "dev:docs": "pnpm --filter @stategraph/docs dev",
+    "dev:modal": "pnpm --filter @stategraph/example-react-modal dev",
+    "dev:form": "pnpm --filter @stategraph/example-react-form dev",
+    "dev:player": "pnpm --filter @stategraph/example-dom-player dev",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",

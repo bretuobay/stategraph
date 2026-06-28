@@ -36,7 +36,7 @@ export function createTraceRecorder(
   const events: InspectTraceEvent[] = [];
   const createdAt = Date.now();
   const sessionId = options.sessionId ?? generateId();
-  let machineId = options.machineId ?? "unknown";
+  const machineId = options.machineId ?? "unknown";
   let actorId = options.actorId ?? "unknown";
   let stopped = false;
 

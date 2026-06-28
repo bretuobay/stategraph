@@ -132,9 +132,10 @@ function buildEffectProvide(
     provide[src] = fromPromise(() => {
       const entry = queue[callIndex++];
       if (!entry) return Promise.resolve(undefined);
-      return entry.ok
-        ? Promise.resolve(entry.payload)
-        : Promise.reject(entry.payload as Error);
+      if (entry.ok) return Promise.resolve(entry.payload);
+      // Effects can reject with any value; cast is required (unknown → Error).
+      const err = entry.payload as Error;
+      return Promise.reject(err);
     });
   }
   return provide;

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import {
   assign,
   createActor,
@@ -8,6 +8,7 @@ import {
   fromPromise,
   setup,
 } from ".";
+import type { ActorRef, StateGraphEvent, StateGraphSnapshot } from ".";
 
 describe("@stategraph/core", () => {
   it("creates a typed setup machine and serializable IR", () => {
@@ -265,5 +266,401 @@ describe("@stategraph/core", () => {
         reject: () => undefined,
       }),
     ).toThrow("post-MVP stub");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TRD §10.1 runtime conformance suite
+// ---------------------------------------------------------------------------
+
+describe("@stategraph/core — transition priority and event bubbling", () => {
+  it("leaf transition wins over ancestor for the same event", () => {
+    // Both outer and inner handle "GO"; inner's transition should fire because
+    // findTransitionFromLeaf walks leaf-first.
+    const machine = createMachine({
+      id: "priority",
+      initial: "outer",
+      states: {
+        outer: {
+          initial: "inner",
+          on: { GO: { target: "fallback" } },
+          states: {
+            inner: { on: { GO: { target: "inner_done" } } },
+            inner_done: { type: "final" },
+          },
+        },
+        fallback: { type: "final" },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "GO" });
+    // inner_done is nested inside outer → stateValue produces a nested object
+    expect(actor.getSnapshot().value).toEqual({ outer: { inner_done: "inner_done" } });
+  });
+
+  it("event bubbles to ancestor when leaf has no matching handler", () => {
+    const machine = createMachine({
+      id: "bubbling",
+      initial: "outer",
+      states: {
+        outer: {
+          initial: "inner",
+          on: { ESCAPE: { target: "escaped" } },
+          states: { inner: {} },
+        },
+        escaped: { type: "final" },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "ESCAPE" });
+    expect(actor.getSnapshot().value).toBe("escaped");
+  });
+});
+
+describe("@stategraph/core — entry/exit ordering", () => {
+  it("parent entry fires before child entry on initial entry", () => {
+    const log: string[] = [];
+    const machine = setup({
+      actions: {
+        logOuter: () => { log.push("outer"); },
+        logInner: () => { log.push("inner"); },
+      },
+    }).createMachine({
+      id: "entry-order",
+      initial: "outer",
+      states: {
+        outer: {
+          entry: ["logOuter"],
+          initial: "inner",
+          states: { inner: { entry: ["logInner"] } },
+        },
+      },
+    });
+
+    createActor(machine).start();
+    expect(log).toEqual(["outer", "inner"]);
+  });
+
+  it("exit fires before entry on cross-state transition", () => {
+    const log: string[] = [];
+    const machine = setup({
+      actions: {
+        onExit: () => { log.push("exit"); },
+        onEntry: () => { log.push("entry"); },
+      },
+    }).createMachine({
+      id: "exit-entry-order",
+      initial: "a",
+      states: {
+        a: { exit: ["onExit"], on: { NEXT: { target: "b" } } },
+        b: { entry: ["onEntry"] },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "NEXT" });
+    expect(log).toEqual(["exit", "entry"]);
+  });
+
+  it("transition actions run between exit and entry", () => {
+    const log: string[] = [];
+    const machine = setup({
+      actions: {
+        onExit:       () => { log.push("exit"); },
+        onTransition: () => { log.push("transition"); },
+        onEntry:      () => { log.push("entry"); },
+      },
+    }).createMachine({
+      id: "tx-action-order",
+      initial: "a",
+      states: {
+        a: {
+          exit: ["onExit"],
+          on: { NEXT: { target: "b", actions: ["onTransition"] } },
+        },
+        b: { entry: ["onEntry"] },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "NEXT" });
+    expect(log).toEqual(["exit", "transition", "entry"]);
+  });
+});
+
+describe("@stategraph/core — self-transitions", () => {
+  it("default self-transition is internal — exit/entry do NOT fire", () => {
+    const log: string[] = [];
+    const machine = setup({
+      actions: {
+        onExit:  () => { log.push("exit"); },
+        onEntry: () => { log.push("entry"); },
+      },
+    }).createMachine({
+      id: "self-internal",
+      initial: "a",
+      states: {
+        a: {
+          entry: ["onEntry"],
+          exit: ["onExit"],
+          on: { SELF: { target: "a" } },
+        },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    log.length = 0; // clear the startup entry log
+    actor.send({ type: "SELF" });
+    // LCA(a, a) = a → nothing exits; nothing enters
+    expect(log).toEqual([]);
+  });
+
+  it("self-transition with reenter: true exits then re-enters the state", () => {
+    const log: string[] = [];
+    const machine = setup({
+      actions: {
+        onExit:  () => { log.push("exit"); },
+        onEntry: () => { log.push("entry"); },
+      },
+    }).createMachine({
+      id: "self-reenter",
+      initial: "a",
+      states: {
+        a: {
+          entry: ["onEntry"],
+          exit: ["onExit"],
+          on: { SELF: { target: "a", reenter: true } },
+        },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    log.length = 0;
+    actor.send({ type: "SELF" });
+    expect(log).toEqual(["exit", "entry"]);
+  });
+});
+
+describe("@stategraph/core — history state restoration", () => {
+  it("shallow history restores the last active leaf inside a compound state", () => {
+    const machine = createMachine({
+      id: "hist",
+      initial: "idle",
+      states: {
+        idle: { on: { OPEN: { target: "dialog.page1" }, REOPEN: { target: "dialog.hist" } } },
+        dialog: {
+          initial: "page1",
+          on: { CLOSE: { target: "idle" } },
+          states: {
+            page1: { on: { NEXT: { target: "page2" } } },
+            page2: {},
+            hist: { type: "history" },
+          },
+        },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "OPEN" });        // → dialog.page1
+    actor.send({ type: "NEXT" });        // → dialog.page2
+    actor.send({ type: "CLOSE" });       // → idle  (history saves dialog.page2)
+    expect(actor.getSnapshot().value).toBe("idle");
+
+    actor.send({ type: "REOPEN" });      // → dialog.hist → should restore dialog.page2
+    // page2 is nested inside dialog → stateValue produces a nested object
+    expect(actor.getSnapshot().value).toEqual({ dialog: { page2: "page2" } });
+  });
+
+  it("history with no prior record leaves configuration empty (known gap: no default fallback)", () => {
+    // When no history has been recorded and a machine transitions to a history pseudostate,
+    // the runtime currently leaves the configuration empty (value = ""). A proper SCXML
+    // implementation would fall back to the compound parent's initial child. Tracked as a
+    // post-MVP fix; this test documents the current behaviour so regressions are caught.
+    const machine = createMachine({
+      id: "hist-fallback",
+      initial: "idle",
+      states: {
+        idle: { on: { OPEN: { target: "dialog.hist" } } },
+        dialog: {
+          initial: "page1",
+          states: {
+            page1: {},
+            hist: { type: "history" },
+          },
+        },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "OPEN" }); // no prior history → hist node has no stored leaves
+    // Configuration becomes empty; stateValue returns "".
+    expect(actor.getSnapshot().value).toBe("");
+  });
+});
+
+describe("@stategraph/core — child actor lifecycle", () => {
+  it("snapshot.children contains ChildActorRef for each active invoke", () => {
+    const machine = setup({
+      effects: { channel: fromCallback(() => undefined) },
+    }).createMachine({
+      id: "child-test",
+      initial: "active",
+      states: { active: { invoke: { src: "channel", id: "ch1" } } },
+    });
+
+    const actor = createActor(machine).start();
+    const children = actor.getSnapshot().children;
+    expect(Object.keys(children)).toContain("ch1");
+    expect(children["ch1"]).toMatchObject({ id: "ch1" });
+  });
+
+  it("send on ChildActorRef dispatches to receive listeners inside the effect", () => {
+    const received: StateGraphEvent[] = [];
+
+    const machine = setup({
+      effects: {
+        channel: fromCallback(({ receive }) => {
+          receive((event) => { received.push(event); });
+        }),
+      },
+    }).createMachine({
+      id: "receive-test",
+      initial: "active",
+      states: { active: { invoke: { src: "channel", id: "ch1" } } },
+    });
+
+    const actor = createActor(machine).start();
+    const child = actor.getSnapshot().children["ch1"];
+    expect(child).toBeDefined();
+    child?.send({ type: "PING" });
+    expect(received).toHaveLength(1);
+    expect(received[0]?.type).toBe("PING");
+  });
+
+  it("stop on ChildActorRef cancels the effect", () => {
+    const cleanup = vi.fn();
+
+    const machine = setup({
+      effects: { channel: fromCallback(() => cleanup) },
+    }).createMachine({
+      id: "stop-test",
+      initial: "active",
+      states: { active: { invoke: { src: "channel", id: "ch1" } } },
+    });
+
+    const actor = createActor(machine).start();
+    expect(cleanup).not.toHaveBeenCalled();
+    const child = actor.getSnapshot().children["ch1"];
+    child?.stop();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it("snapshot.children is empty after the invoking state is exited", () => {
+    const machine = setup({
+      effects: { channel: fromCallback(() => undefined) },
+    }).createMachine({
+      id: "exit-children",
+      initial: "active",
+      states: {
+        active: {
+          invoke: { src: "channel", id: "ch1" },
+          on: { STOP: { target: "done" } },
+        },
+        done: { type: "final" },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    expect(Object.keys(actor.getSnapshot().children)).toContain("ch1");
+
+    actor.send({ type: "STOP" });
+    expect(Object.keys(actor.getSnapshot().children)).not.toContain("ch1");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Compile-time type tests (run at build time; assertions are type-level only)
+// ---------------------------------------------------------------------------
+
+describe("@stategraph/core — compile-time type tests", () => {
+  it("setup() infers context and event types through createMachine", () => {
+    type Ctx = { count: number };
+    type Evt = { type: "INC" } | { type: "RESET" };
+
+    const machine = setup<Ctx, Evt>({
+      actions: {
+        increment: assign<Ctx, Evt>(({ context }) => ({ count: context.count + 1 })),
+      },
+    }).createMachine({
+      id: "typed",
+      context: { count: 0 },
+      initial: "idle",
+      states: { idle: { on: { INC: { actions: ["increment"] } } } },
+    });
+
+    type SnapshotCtx = ReturnType<typeof machine.toIR>["id"];
+    expectTypeOf<SnapshotCtx>().toEqualTypeOf<string>();
+
+    const actor = createActor(machine).start();
+    // snapshot.context is Readonly<Ctx>
+    expectTypeOf(actor.getSnapshot().context).toEqualTypeOf<Readonly<Ctx>>();
+  });
+
+  it("createActor returns ActorRef typed to the machine's context and event", () => {
+    type Ctx = { value: string };
+    type Evt = { type: "SET"; value: string };
+
+    const machine = setup<Ctx, Evt>({}).createMachine({
+      id: "typed-actor",
+      context: { value: "" },
+      initial: "idle",
+      states: { idle: {} },
+    });
+
+    const actor = createActor(machine);
+    expectTypeOf(actor).toMatchTypeOf<ActorRef<Ctx, Evt>>();
+    expectTypeOf<typeof actor["getSnapshot"]>().toBeFunction();
+  });
+
+  it("snapshot is StateGraphSnapshot typed to context and event", () => {
+    type Ctx = { active: boolean };
+    type Evt = { type: "TOGGLE" };
+
+    const machine = setup<Ctx, Evt>({}).createMachine({
+      id: "typed-snap",
+      context: { active: false },
+      initial: "idle",
+      states: { idle: {} },
+    });
+
+    const snapshot = createActor(machine).start().getSnapshot();
+    expectTypeOf(snapshot).toMatchTypeOf<StateGraphSnapshot<Ctx, Evt>>();
+    expectTypeOf(snapshot.context).toEqualTypeOf<Readonly<Ctx>>();
+  });
+
+  it("select() infers the selector return type", () => {
+    type Ctx = { count: number };
+    const machine = setup<Ctx, StateGraphEvent>({}).createMachine({
+      id: "selector",
+      context: { count: 0 },
+      initial: "idle",
+      states: { idle: {} },
+    });
+
+    const actor = createActor(machine).start();
+    actor.select(
+      (s) => s.context.count,
+      (count) => {
+        expectTypeOf(count).toEqualTypeOf<number>();
+      },
+    );
+  });
+
+  it("assign() narrows the partial context patch type", () => {
+    type Ctx = { x: number; y: string };
+    type AssignResult = ReturnType<typeof assign<Ctx>>;
+    expectTypeOf<AssignResult["resolve"]>().toBeFunction();
   });
 });

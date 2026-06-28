@@ -4,6 +4,7 @@ import type {
   ActorOptions,
   ActorRef,
   AssignAction,
+  ChildActorRef,
   GuardRef,
   InvokeDef,
   RuntimeArgs,
@@ -23,6 +24,7 @@ interface ActiveEffect {
   invoke?: InvokeDef;
   abort: AbortController;
   cleanup?: () => void;
+  receiveListeners: Set<(event: StateGraphEvent) => void>;
 }
 
 interface SelectorSubscription<TContext, TEvent extends StateGraphEvent, TValue> {
@@ -80,14 +82,16 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
   start(): ActorRef<TContext, TEvent> {
     if (this.status === "active") return this;
     this.status = "active";
-    this.active = this.enterInitial(this.machine.registry.rootId);
-    const pending = this.startRuntimeWorkForConfiguration(this.active, {
-      type: "@@INIT",
-    } as TEvent);
-    this.snapshot = this.createSnapshot({ type: "@@INIT" }, [], pending, true, undefined);
+    const initEvent = { type: "@@INIT" } as TEvent;
+    // Run entry for the root machine node, then descend running entry for initial children.
+    const rootEntry = this.machine.registry.nodes.get(this.machine.registry.rootId)?.def.entry;
+    this.runActions(rootEntry, initEvent);
+    this.active = this.enterDescendants(this.machine.registry.rootId, initEvent);
+    const pending = this.startRuntimeWorkForConfiguration(this.active, initEvent);
+    this.snapshot = this.createSnapshot(initEvent, [], pending, true, undefined);
     this.emit({ type: "@actor.started", snapshot: this.snapshot });
     this.notify();
-    this.processAlways({ type: "@@INIT" } as TEvent);
+    this.processAlways(initEvent);
     return this;
   }
 
@@ -199,7 +203,13 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
         const entryPath = this.entryPath(source.id, targetId, plan.transition.reenter === true);
         for (const entryId of entryPath)
           this.runActions(this.machine.registry.nodes.get(entryId)?.def.entry, event);
-        for (const leaf of this.enterInitial(targetId)) enteredLeaves.add(leaf);
+        // When target is newly entered (entryPath is non-empty), also run entry for its
+        // initial descendants. For self-transitions and ancestor-targets entryPath is
+        // empty, so we fall back to enterInitial (no extra entry actions).
+        const leaves = entryPath.length > 0
+          ? this.enterDescendants(targetId, event)
+          : this.enterInitial(targetId);
+        for (const leaf of leaves) enteredLeaves.add(leaf);
       }
       fired.push({ source: source.id, target: targetId, eventType: event.type });
       this.emit({
@@ -369,6 +379,7 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
             stateId: node.id,
             src: `@after.${delay}`,
             abort: new AbortController(),
+            receiveListeners: new Set(),
             cleanup: () => clearTimeout(handle),
           });
           pending.push({ id, src: `@after.${delay}`, input: null });
@@ -391,19 +402,29 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
     if (!effect) throw new Error(`Missing effect implementation "${src}".`);
     const id = fixedId ?? `${src}:${++this.effectSeq}`;
     const abort = new AbortController();
+    const receiveListeners = new Set<(event: StateGraphEvent) => void>();
+    // Register in effects map before run() so synchronous receive() calls from inside
+    // the effect body can find the active entry.
+    const active: ActiveEffect = {
+      id,
+      stateId,
+      src,
+      ...(invoke ? { invoke } : {}),
+      abort,
+      receiveListeners,
+    };
+    this.effects.set(id, active);
     const controls = {
       signal: abort.signal,
-      sendBack: (sendBackEvent: StateGraphEvent) => this.send(sendBackEvent as TEvent),
-      receive: (listener: (received: StateGraphEvent) => void) => {
-        void listener;
-        return () => undefined;
+      sendBack: (sendBackEvent: StateGraphEvent): void => this.send(sendBackEvent as TEvent),
+      receive: (listener: (received: StateGraphEvent) => void): (() => void) => {
+        receiveListeners.add(listener);
+        return () => { receiveListeners.delete(listener); };
       },
       resolve: (output: unknown) => this.completeInvoke(id, output, invoke, true),
       reject: (error: unknown) => this.completeInvoke(id, error, invoke, false),
     };
     this.emit({ type: "@effect.started", effectId: id, src, input });
-    const active: ActiveEffect = { id, stateId, src, ...(invoke ? { invoke } : {}), abort };
-    this.effects.set(id, active);
     try {
       const result = effect.run(input, controls);
       if (typeof result === "function") active.cleanup = result;
@@ -416,6 +437,24 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
       this.completeInvoke(id, error, invoke, false);
     }
     return { id, src, input };
+  }
+
+  private buildChildren(): Readonly<Record<string, ChildActorRef>> {
+    const children: Record<string, ChildActorRef> = {};
+    for (const active of this.effects.values()) {
+      if (!active.invoke) continue;
+      const effectId = active.id;
+      children[effectId] = {
+        id: effectId,
+        send: (childEvent: StateGraphEvent): void => {
+          for (const listener of active.receiveListeners) listener(childEvent);
+        },
+        stop: (): void => {
+          this.cancelEffect(effectId);
+        },
+      };
+    }
+    return children;
   }
 
   private completeInvoke(
@@ -487,6 +526,27 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
     const leaves = new Set<string>();
     for (const childId of this.machine.registry.children.get(stateId) ?? []) {
       for (const leaf of this.enterInitial(childId)) leaves.add(leaf);
+    }
+    return leaves;
+  }
+
+  // Like enterInitial but also runs entry actions for each initial child as it descends.
+  // Does NOT run entry for stateId itself — callers are responsible for that.
+  private enterDescendants(stateId: string, event: TEvent): Set<string> {
+    const node = this.machine.registry.nodes.get(stateId);
+    if (!node) throw new Error(`Unknown state "${stateId}".`);
+    if (node.type === "history") return this.history.get(node.parent ?? "") ?? new Set();
+    if (node.type === "atomic" || node.type === "final") return new Set([stateId]);
+    if (node.type === "compound") {
+      if (!node.initial) throw new Error(`Compound state "${stateId}" requires initial.`);
+      const initialId = `${stateId}.${node.initial}`;
+      this.runActions(this.machine.registry.nodes.get(initialId)?.def.entry, event);
+      return this.enterDescendants(initialId, event);
+    }
+    const leaves = new Set<string>();
+    for (const childId of this.machine.registry.children.get(stateId) ?? []) {
+      this.runActions(this.machine.registry.nodes.get(childId)?.def.entry, event);
+      for (const leaf of this.enterDescendants(childId, event)) leaves.add(leaf);
     }
     return leaves;
   }
@@ -565,7 +625,7 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
       event,
       transitions,
       pendingEffects,
-      children: {},
+      children: this.buildChildren(),
       error,
       _traceId: this.inspectors.size > 0 ? `${this.actorId}:${this.seq}` : undefined,
     };

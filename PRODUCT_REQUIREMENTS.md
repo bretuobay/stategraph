@@ -4,17 +4,16 @@
 
 StateGraph TS is a framework-agnostic TypeScript state management and state machine platform for building explicit, inspectable, testable interaction logic across modern applications.
 
-The product is designed as a direct replacement for XState, with a broader platform vision: a deterministic statechart runtime, strongly typed state-management primitives, adapters for major UI frameworks, devtools, a visual editor, model checking, generated tests, and migration tooling.
+The product is designed as a migration-friendly alternative to XState with a broader platform vision: a deterministic statechart runtime, strongly typed state-management primitives, adapters for major UI frameworks, devtools, a visual editor, model checking, generated tests, and migration tooling.
 
-The product is grounded in decades of research on state machines in HCI and UI engineering. The core thesis is that industry libraries expose state machines but still leave major research-backed gaps:
+The product is grounded in decades of research on state machines in HCI and UI engineering. Existing tools such as XState/Stately and Zag already bring statecharts into production UI development through explicit interaction models, framework adapters, inspection, visualization, and test-path generation. The core thesis is that there is still room for a more integrated TypeScript-first platform that closes research-backed gaps across state management, statecharts, and UI interaction tooling:
 
-- interaction logic is often entangled with presentation logic;
-- callbacks and reducers still scatter implicit modes across code;
-- parallel UI regions cause state explosion;
-- side effects are hard to inspect and replay;
-- tests rarely derive from the state model itself;
-- modern interfaces need identity-aware and uncertain-input extensions;
-- framework integrations often shape semantics instead of adapting to a stable runtime.
+- state-management primitives and statechart semantics are usually treated as separate layers;
+- deterministic effect tracing, replay, and persistence are not consistently first-class;
+- model analysis and model checking are not commonly part of the default development workflow;
+- generated tests rarely cover invalid-event scenarios, protocol compatibility, and user-error paths together;
+- modern interfaces need optional identity-aware and uncertain-input extensions;
+- framework integrations should adapt to one stable runtime semantics rather than shape semantics themselves.
 
 StateGraph TS must make interaction state explicit while staying practical for TypeScript teams building React, Vue, Angular, Solid, Svelte, vanilla DOM, and server-side workflows.
 
@@ -59,6 +58,7 @@ Foundational requirements:
 - Do not fork runtime semantics per framework.
 - Do not require a visual editor to use the runtime.
 - Do not require or center XML/SCXML authoring.
+- Do not promise drop-in compatibility with the XState API or exact runtime semantics.
 - Do not optimize first for distributed consensus or backend workflow orchestration, though the runtime should be usable outside UI.
 - Do not hide state transitions behind implicit framework reactivity.
 - Do not make side effects execute invisibly or outside the runtime trace.
@@ -81,7 +81,7 @@ Foundational requirements:
 
 ## 5. Product Positioning
 
-StateGraph TS is a direct XState replacement with stronger emphasis on:
+StateGraph TS is a migration-friendly alternative for teams that want statecharts, state management, and analysis tooling in one TypeScript-first platform, with stronger emphasis on:
 
 - TypeScript-first ergonomics rather than machine definitions that need heavy annotation.
 - Framework-neutral runtime semantics with thin adapters.
@@ -720,7 +720,7 @@ These must be resolved during technical design, not by product consumers:
 - depth and limits of compile-time state path inference;
 - trace format versioning;
 - model-checking algorithm limits for large/infinite context spaces;
-- compatibility scope with XState semantics;
+- migration mapping from common XState concepts to StateGraph TS concepts;
 - whether builder API ships in MVP or as experimental.
 
 ## 20. Documentation Requirements

@@ -65,9 +65,6 @@ importers:
       '@stategraph/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@stategraph/inspect':
-        specifier: workspace:*
-        version: link:../../packages/inspect
       '@stategraph/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -370,6 +367,9 @@ importers:
       '@stategraph/core':
         specifier: workspace:*
         version: link:../core
+      '@stategraph/inspect':
+        specifier: workspace:*
+        version: link:../inspect
       react:
         specifier: '>=18.0.0'
         version: 19.2.7

@@ -18,6 +18,7 @@ import {
   type StateGraphMachine,
   type StateGraphSnapshot,
 } from "@stategraph/core";
+import { registerWithDevtools } from "./devtoolsStore";
 
 export const STATEGRAPH_REACT_PACKAGE = "@stategraph/react";
 
@@ -56,6 +57,11 @@ export function useActorRef<TContext, TEvent extends StateGraphEvent>(
   useEffect(() => {
     const actor = actorRef.current;
     if (!actor) return undefined;
+    // Guard lets bundlers DCE this entire block in production when they replace
+    // process.env.NODE_ENV with "production" (Vite, webpack, esbuild all do this).
+    if (process.env.NODE_ENV !== "production") {
+      registerWithDevtools(actor as ActorRef<unknown, StateGraphEvent>, machine.id);
+    }
     actor.start();
     return () => actor.stop();
   }, []);

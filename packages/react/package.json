@@ -12,6 +12,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./devtools": {
+      "import": {
+        "types": "./dist/devtools.d.ts",
+        "default": "./dist/devtools.js"
+      },
+      "require": {
+        "types": "./dist/devtools.d.cts",
+        "default": "./dist/devtools.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",
@@ -29,7 +39,7 @@
     "url": "https://github.com/stategraph/stategraph-ts.git"
   },
   "scripts": {
-    "build": "tsup && cp dist/index.d.ts dist/index.d.cts",
+    "build": "tsup && cp dist/index.d.ts dist/index.d.cts && cp dist/devtools.d.ts dist/devtools.d.cts",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
@@ -38,7 +48,8 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
-    "@stategraph/core": "workspace:*"
+    "@stategraph/core": "workspace:*",
+    "@stategraph/inspect": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

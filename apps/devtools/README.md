@@ -1,8 +1,6 @@
 # StateGraph DevTools
 
-A browser-based inspector panel for StateGraph actors. Shows active states, event and transition logs, guard results, context diffs, effect lifecycle, and the full trace history for every connected actor.
-
-Powered by `@stategraph/inspect` — all data is versioned `TraceEnvelope` JSON, so traces can be exported, imported, and replayed independently of the app under inspection.
+Interactive playground and live demo for `@stategraph/react/devtools`. Shows the `DevtoolsOverlay` component running against real state machines so you can see what the embedded overlay looks like in a real app.
 
 ## Running
 
@@ -12,137 +10,46 @@ pnpm dev --filter @stategraph/devtools
 
 Opens at `http://localhost:5173` (or the next available port).
 
-## Connection modes
+## What you see
 
-### Demo
+The app runs two machines side by side — a counter and a traffic light — both wired up with `useActor` from `@stategraph/react`. The `DevtoolsOverlay` from `@stategraph/react/devtools` is mounted at the bottom of the page and auto-discovers both actors without any extra wiring.
 
-Click **Load Demo** to immediately explore the panel using a pre-recorded checkout-form trace. No app required. The demo covers all 11 trace event types (`@actor.started`, `@event.received`, `@transition.fired`, `@action.executed`, `@context.updated`, `@effect.started`, `@effect.done`, `@effect.error`, `@effect.cancelled`, `@actor.stopped`, `@error`).
+Interact with the machines (click the counter buttons, advance the traffic light) and watch trace events appear in real time in the overlay panel.
 
-### Live (postMessage)
+## How to add this to your own app
 
-Click **Connect Live** in the devtools panel, then add a bridge call to any actor in your app:
+```tsx
+// 1. Import from the dedicated subpath — tree-shaken in production
+import { DevtoolsOverlay } from "@stategraph/react/devtools";
 
-```ts
-import { createActor } from "@stategraph/core";
-import { createDevtoolsBridge } from "@stategraph/inspect";
+// 2. Mount once near your app root, guarded by a dev-only condition
+export function App() {
+  return (
+    <>
+      <YourRoutes />
+      {import.meta.env.DEV && <DevtoolsOverlay />}
+    </>
+  );
+}
 
-const actor = createActor(machine).start();
-
-createDevtoolsBridge(actor, {
-  machineId: machine.id,
-  channel: {
-    postMessage: (msg) => window.postMessage(msg, "*"),
-  },
-});
+// 3. That's it — every useActor / useActorRef call is auto-discovered.
 ```
 
-The devtools panel must be open in the **same browser window** as your app for `window.postMessage` to reach it. Use `window.parent.postMessage` or `window.opener.postMessage` if the panel is in an iframe or a separate window.
-
-When multiple actors connect, they each appear as a separate row in the **Actors** sidebar. Select one to view its event log.
-
-#### Late connection: sending a replay snapshot
-
-If the devtools panel opens after the actor has already processed events, pass `sendSnapshot: true` to the bridge so it emits a full `trace:snapshot` message on connect:
-
-```ts
-createDevtoolsBridge(actor, {
-  machineId: machine.id,
-  sendSnapshot: true,
-  channel: {
-    postMessage: (msg) => window.postMessage(msg, "*"),
-  },
-});
-```
-
-The panel will load the full history from that snapshot rather than starting from an empty log.
-
-#### Filtering trace events
-
-Use the `filter` option to reduce noise:
-
-```ts
-createDevtoolsBridge(actor, {
-  machineId: machine.id,
-  channel: { postMessage: (msg) => window.postMessage(msg, "*") },
-  filter: (event) => event.type !== "@action.executed",
-});
-```
-
-### Import / Export
-
-Use the **Export Trace** button to download the selected actor's full trace as a `.trace.json` file. Use **Import Trace** to load any previously exported file — the imported session appears immediately in the Actors sidebar.
-
-Import and export use the versioned `TraceEnvelope` format from `@stategraph/inspect`. Imported traces can also be replayed programmatically:
-
-```ts
-import { deserializeEnvelope, replayTrace } from "@stategraph/inspect";
-
-const envelope = deserializeEnvelope(json);
-const { snapshots } = replayTrace(machine, envelope);
-```
-
-## UI overview
-
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│ ◆ StateGraph DevTools                    [Load Demo] [Connect Live]   │
-├──────────────┬─────────────────────────────────┬──────────────────────┤
-│ ACTORS       │ EVENT LOG                       │ Active States        │
-│              │ seq  time   type    detail       │                      │
-│ checkoutForm │  1   0ms   actor.started        │ filling              │
-│   (stopped)  │  2  245ms  event.received START │                      │
-│              │  3  246ms  transition.fired  ──►│ Context              │
-│              │  4  246ms  action.executed   ──►│ { email: "...", ...} │
-│              │  5  1.1s   event.received   ──► │                      │
-│              │  ...                            │ Event #12            │
-│              │ ► 12  3s   transition.fired     │ source: filling      │
-│ [Export]     │           filling → submitting  │ target: submitting   │
-│ [Import]     │                                 │ guard: isFormValid ✓ │
-└──────────────┴─────────────────────────────────┴──────────────────────┘
-```
-
-- **Actors sidebar** — one row per connected actor, showing machine ID, actor ID, status (`active` / `stopped`), and event count.
-- **Event log** — all trace events in sequence order. Each row shows sequence number, timestamp (ms since actor started), event type (color-coded), and a one-line summary. Click any row to inspect it in the detail panel.
-- **Detail panel** — three sections:
-  - *Active States* — the current configuration, derived from `@actor.started` snapshot and subsequent `@transition.fired` targets.
-  - *Context* — the current context object, built by replaying `@context.updated` patches from the initial snapshot.
-  - *Event Detail* — the selected trace event expanded: transition source/target, guard results (pass/fail badges), action type and params, effect ID and input/output, or context patch.
-
-## Event type color reference
-
-| Color | Event types |
-|---|---|
-| Blue | `@event.received` |
-| Purple | `@transition.fired` |
-| Teal | `@action.executed`, `@context.updated` |
-| Yellow | `@effect.started` |
-| Green | `@actor.started`, `@effect.done` |
-| Red | `@effect.error`, `@error` |
-| Orange | `@effect.cancelled` |
-| Dim | `@actor.stopped` |
+Every actor created through `useActor` or `useActorRef` anywhere in the tree registers itself automatically. No manual instrumentation required.
 
 ## Architecture
 
 ```
-apps/devtools/src/
-  machine.ts              # State machine: idle | listening | active
-  channel/
-    demoTrace.ts          # Hardcoded TraceEnvelope for demo mode
-  hooks/
-    useDevtools.ts        # Wires machine + postMessage + export/import
-  ui/
-    App.tsx               # Three-column layout and toolbar
-    ActorList.tsx         # Sidebar actor list
-    EventLog.tsx          # Scrollable trace event table
-    DetailPanel.tsx       # Active states, context, event detail
-    ExportImport.tsx      # Export/import file controls
-  main.tsx                # Vite entry point
+apps/devtools/
+  src/
+    main.tsx              # React root
+    ui/
+      App.tsx             # Thin wrapper with branding header
+      Playground.tsx      # Counter + traffic light machines + DevtoolsOverlay
 ```
 
-The devtools panel is itself a StateGraph actor: `devtoolsMachine` has three states.
+The `DevtoolsOverlay` component lives in `packages/react/src/devtools/index.tsx` and is published under the `@stategraph/react/devtools` subpath export. This app is both its primary test harness and its reference usage example.
 
-- `idle` — no session connected; shows the connection prompt.
-- `listening` — live mode active, waiting for the first `TRACE_RECEIVED` event.
-- `active` — at least one session is loaded (live, demo, or imported).
+## Standalone inspector (Option B — planned Phase 2)
 
-Trace data accumulates in context as `Record<actorId, SessionData>` — one entry per actor session, each holding the ordered `InspectTraceEvent[]` array.
+A browser extension is planned for cases where embedding the overlay is not possible (production-only pages, non-React apps, SSR-heavy flows). It would inject a small content script that forwards trace events from any app using `@stategraph/react` to the extension devtools panel — zero bundle cost, no app changes required. See `packages/react/README.md` for details.

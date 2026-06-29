@@ -123,6 +123,77 @@ For parallel machines, `snapshot.value` is a nested object. Use `snapshot.config
 const isPlaying = snapshot.configuration.has("player.playback.playing");
 ```
 
+## DevtoolsOverlay
+
+An embeddable devtools panel — like React Query DevTools — that auto-discovers every actor created via `useActor` / `useActorRef` in the same app.
+
+### Setup
+
+Import from the dedicated subpath so it is tree-shaken in production:
+
+```tsx
+import { DevtoolsOverlay } from "@stategraph/react/devtools";
+```
+
+Mount it once near the root of your app, guarded by a dev-only condition:
+
+```tsx
+// src/App.tsx
+import { DevtoolsOverlay } from "@stategraph/react/devtools";
+
+export function App() {
+  return (
+    <>
+      <YourRoutes />
+      {import.meta.env.DEV && <DevtoolsOverlay />}
+    </>
+  );
+}
+```
+
+No other changes are required. Every `useActor` / `useActorRef` call anywhere in the tree is automatically instrumented.
+
+### What you see
+
+The overlay renders as a fixed panel anchored to the bottom of the viewport:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ ◆ StateGraph DevTools   3 actors · 41 events          −   × │
+├──────────────┬────────────────────────────────┬──────────────┤
+│ Actors       │ Event log                      │ Event detail │
+│              │  #  time  type        detail   │              │
+│ checkoutForm │  1   0ms  started              │ seq  3       │
+│ authMachine  │  2   4ms  event       SUBMIT   │ ts   12ms    │
+│ navMachine   │  3  12ms  transition  idle→… ◀ │ source idle  │
+│              │  4  15ms  action      clear…   │ target submit│
+└──────────────┴────────────────────────────────┴──────────────┘
+```
+
+- **Actors** — all live and stopped actors, coloured by status.
+- **Event log** — every trace event in arrival order, with timestamp relative to actor start. Auto-scrolls; click a row to inspect.
+- **Event detail** — structured fields for the selected event: guard results for transitions, patches for context updates, input/output for effects.
+
+### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `defaultOpen` | `boolean` | `true` | Whether the panel starts expanded. |
+
+### How it works
+
+`DevtoolsOverlay` calls `activateDevtools()` from the internal `devtoolsStore`. The store uses `globalThis.__stategraph_devtools_handler` as a cross-bundle singleton, so the handler set by the devtools bundle is visible to the main bundle even when bundlers split them into separate chunks. Each actor is registered via `actor.inspect()`, which emits the full `InspectTraceEvent` stream used by `@stategraph/inspect`.
+
+### Browser extension (Option B — planned Phase 2)
+
+For teams that cannot or do not want to ship any devtools code into their bundle, a browser extension is planned. It would:
+
+1. Inject a tiny `contentScript` (< 2 kB) that hooks `window.postMessage`.
+2. Any app using `@stategraph/react` automatically forwards trace events via `postMessage` when the extension is installed (no app-side change required).
+3. The extension panel (built on `apps/devtools`) receives events over the `chrome.runtime.connect` channel and displays the same UI as `DevtoolsOverlay`.
+
+This mirrors how React DevTools and Redux DevTools work. The extension approach has zero production bundle cost but requires browser support and cannot be embedded in non-browser environments (SSR, RN, Electron without extension support). The `DevtoolsOverlay` is the recommended starting point; the extension reuses the same `@stategraph/inspect` protocol so traces are portable between both.
+
 ## Peer dependencies
 
 - `react` ≥ 18.0.0

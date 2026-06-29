@@ -124,7 +124,6 @@ function stateValueToString(value: StateValue): string {
     .join(" | ");
 }
 
-
 function renderDiagnostics(diagnostics: SCXMLDiagnostic[]): void {
   if (diagnostics.length === 0) {
     diagnosticsPanel.textContent = "None";

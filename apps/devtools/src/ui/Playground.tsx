@@ -180,7 +180,7 @@ const LIGHT_LABELS: Record<string, string> = {
 
 function TrafficLightDemo() {
   const { snapshot, send } = useActor(trafficMachine);
-  const state = String(snapshot.value);
+  const state = typeof snapshot.value === "string" ? snapshot.value : "unknown";
   const color = LIGHT_COLORS[state] ?? "#cdd6f4";
 
   return (

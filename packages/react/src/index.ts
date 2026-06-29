@@ -60,7 +60,7 @@ export function useActorRef<TContext, TEvent extends StateGraphEvent>(
     // Guard lets bundlers DCE this entire block in production when they replace
     // process.env.NODE_ENV with "production" (Vite, webpack, esbuild all do this).
     if (process.env.NODE_ENV !== "production") {
-      registerWithDevtools(actor as ActorRef<unknown, StateGraphEvent>, machine.id);
+      registerWithDevtools(actor, machine.id);
     }
     actor.start();
     return () => actor.stop();

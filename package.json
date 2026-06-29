@@ -12,6 +12,7 @@
     "dev:modal": "pnpm --filter @stategraph/example-react-modal dev",
     "dev:form": "pnpm --filter @stategraph/example-react-form dev",
     "dev:player": "pnpm --filter @stategraph/example-dom-player dev",
+    "dev:scxml": "pnpm --filter @stategraph/example-scxml-import dev",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",

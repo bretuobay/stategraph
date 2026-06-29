@@ -132,7 +132,8 @@ export interface StateGraphSnapshot<TContext, TEvent extends StateGraphEvent = S
   context: Readonly<TContext>;
   changed: boolean;
   event: TEvent | { type: "@@INIT" } | null;
-  transitions: ReadonlyArray<{
+  nextEvents: ReadonlyArray<string>;
+  firedTransitions: ReadonlyArray<{
     readonly source: string;
     readonly target: string | null;
     readonly eventType: string;

@@ -195,6 +195,25 @@ importers:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.0)(happy-dom@20.10.6)
 
+  examples/scxml-import:
+    dependencies:
+      '@stategraph/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@stategraph/scxml':
+        specifier: workspace:*
+        version: link:../../packages/scxml
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 6.4.3(@types/node@22.20.0)(tsx@4.22.4)
+      vitest:
+        specifier: 'catalog:'
+        version: 2.1.9(@types/node@22.20.0)(happy-dom@20.10.6)
+
   packages/angular:
     dependencies:
       '@stategraph/core':

@@ -150,12 +150,28 @@ interface StateGraphSnapshot<TContext, TEvent> {
   context: Readonly<TContext>;
   changed: boolean;
   event: TEvent | { type: "@@INIT" } | null;
-  transitions: ReadonlyArray<{ source: string; target: string | null; eventType: string }>;
+  nextEvents: ReadonlyArray<string>;          // event types that trigger at least one transition from the current configuration
+  firedTransitions: ReadonlyArray<{ source: string; target: string | null; eventType: string }>;
   pendingEffects: ReadonlyArray<{ id: string; src: string; input: unknown }>;
   children: Readonly<Record<string, ChildActorRef>>;
   error: unknown;
   _traceId: string | undefined;
 }
+```
+
+**`nextEvents` vs `firedTransitions`:** These two fields are often confused.
+
+- `nextEvents` — event types that will trigger at least one transition from the **current** configuration. Use this to drive UI (enable/disable buttons, show available actions). Walks the full ancestor chain so inherited transitions are included. Sorted alphabetically.
+- `firedTransitions` — transitions that **fired in the last step** (a trace record). Use this for devtools, logging, and test assertions — not for deciding what to render next.
+
+```ts
+// Drive a button from the current state
+const events = snapshot.nextEvents; // ["SUBMIT", "RESET"]
+
+// Assert what just happened in a test
+expect(snapshot.firedTransitions).toEqual([
+  { source: "form.idle", target: "form.submitting", eventType: "SUBMIT" },
+]);
 ```
 
 **Tip:** For parallel machines, `snap.value` is a nested object. Use `snap.configuration` (a flat set of node IDs like `"machine.region.state"`) for reliable state checks.

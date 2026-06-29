@@ -67,9 +67,90 @@ describe("@stategraph/core", () => {
     expect(actor.getSnapshot().status).toBe("done");
     expect(actor.getSnapshot().value).toBe("done");
     expect(actor.getSnapshot().context).toEqual({ valid: true, submitted: true });
-    expect(actor.getSnapshot().transitions).toEqual([
+    expect(actor.getSnapshot().firedTransitions).toEqual([
       { source: "form.idle", target: "form.done", eventType: "SUBMIT" },
     ]);
+  });
+
+  it("nextEvents lists event types available from the current state", () => {
+    const machine = createMachine({
+      id: "nav",
+      initial: "idle",
+      states: {
+        idle: { on: { START: { target: "running" }, RESET: {} } },
+        running: { on: { STOP: { target: "idle" } } },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    expect(actor.getSnapshot().nextEvents).toEqual(["RESET", "START"]);
+
+    actor.send({ type: "START" });
+    expect(actor.getSnapshot().nextEvents).toEqual(["STOP"]);
+  });
+
+  it("nextEvents includes events inherited from ancestor states", () => {
+    const machine = createMachine({
+      id: "bubbling",
+      initial: "outer",
+      states: {
+        outer: {
+          initial: "inner",
+          on: { CANCEL: { target: "cancelled" } },
+          states: {
+            inner: { on: { PROCEED: { target: "done" } } },
+            done: { type: "final" },
+          },
+        },
+        cancelled: { type: "final" },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    // inner contributes PROCEED; outer contributes CANCEL
+    expect(actor.getSnapshot().nextEvents).toEqual(["CANCEL", "PROCEED"]);
+  });
+
+  it("nextEvents covers all active regions in a parallel machine", () => {
+    const machine = createMachine({
+      id: "parallel",
+      type: "parallel",
+      states: {
+        playback: {
+          initial: "paused",
+          states: {
+            paused: { on: { PLAY: { target: "playing" } } },
+            playing: { on: { PAUSE: { target: "paused" } } },
+          },
+        },
+        volume: {
+          initial: "unmuted",
+          states: {
+            unmuted: { on: { MUTE: { target: "muted" } } },
+            muted: { on: { UNMUTE: { target: "unmuted" } } },
+          },
+        },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    expect(actor.getSnapshot().nextEvents).toEqual(["MUTE", "PLAY"]);
+  });
+
+  it("nextEvents is empty on a final state", () => {
+    const machine = createMachine({
+      id: "done",
+      initial: "active",
+      states: {
+        active: { on: { FINISH: { target: "final" } } },
+        final: { type: "final" },
+      },
+    });
+
+    const actor = createActor(machine).start();
+    actor.send({ type: "FINISH" });
+    expect(actor.getSnapshot().status).toBe("done");
+    expect(actor.getSnapshot().nextEvents).toEqual([]);
   });
 
   it("supports targetless transitions and selector equality", () => {

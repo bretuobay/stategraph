@@ -612,9 +612,25 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
     return [...this.active].every((id) => this.machine.registry.nodes.get(id)?.type === "final");
   }
 
+  private computeNextEvents(): ReadonlyArray<string> {
+    const events = new Set<string>();
+    for (const stateId of this.active) {
+      let current: string | null = stateId;
+      while (current) {
+        const node = this.machine.registry.nodes.get(current);
+        if (!node) break;
+        for (const eventType of Object.keys(node.def.on ?? {})) {
+          if (!eventType.startsWith("@")) events.add(eventType);
+        }
+        current = node.parent;
+      }
+    }
+    return [...events].sort();
+  }
+
   private createSnapshot(
     event: TEvent | { type: "@@INIT" } | null,
-    transitions: StateGraphSnapshot<TContext, TEvent>["transitions"],
+    firedTransitions: StateGraphSnapshot<TContext, TEvent>["firedTransitions"],
     pendingEffects: StateGraphSnapshot<TContext, TEvent>["pendingEffects"],
     changed: boolean,
     error: unknown,
@@ -626,7 +642,8 @@ class StateGraphActor<TContext, TEvent extends StateGraphEvent> implements Actor
       context: this.context,
       changed,
       event,
-      transitions,
+      nextEvents: this.computeNextEvents(),
+      firedTransitions,
       pendingEffects,
       children: this.buildChildren(),
       error,

@@ -13,9 +13,16 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
-    "@stategraph/inspect": "workspace:*"
+    "@stategraph/core": "workspace:*",
+    "@stategraph/inspect": "workspace:*",
+    "@stategraph/react": "workspace:*",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@vitejs/plugin-react": "^4.0.0",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

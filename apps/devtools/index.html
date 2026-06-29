@@ -1,2 +1,46 @@
-<div id="app"></div>
-<script type="module" src="/src/main.ts"></script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StateGraph DevTools</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --dt-bg: #1e1e2e;
+        --dt-surface: #252537;
+        --dt-surface2: #2a2a40;
+        --dt-border: #363650;
+        --dt-text: #cdd6f4;
+        --dt-text-dim: #6c7086;
+        --dt-accent: #89b4fa;
+        --dt-green: #a6e3a1;
+        --dt-red: #f38ba8;
+        --dt-yellow: #f9e2af;
+        --dt-orange: #fab387;
+        --dt-purple: #cba6f7;
+        --dt-teal: #94e2d5;
+        font-family: "Menlo", "Monaco", "Consolas", monospace;
+        font-size: 12px;
+      }
+      html,
+      body,
+      #app {
+        height: 100%;
+        background: var(--dt-bg);
+        color: var(--dt-text);
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

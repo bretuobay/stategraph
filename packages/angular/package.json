@@ -3,5 +3,53 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Post-MVP Angular adapter stub for StateGraph TS."
+  "description": "Angular adapter for StateGraph TS.",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup && cp dist/index.d.ts dist/index.d.cts",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest --passWithNoTests",
+    "lint": "eslint src tsup.config.ts",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "@stategraph/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@angular/core": ">=16.0.0",
+    "rxjs": ">=7.8.0"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^18.2.13",
+    "@angular/core": "^18.2.13",
+    "@stategraph/testing": "workspace:*",
+    "happy-dom": "*",
+    "rxjs": "^7.8.2",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "zone.js": "^0.14.10"
+  }
 }

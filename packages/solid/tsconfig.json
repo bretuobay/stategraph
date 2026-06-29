@@ -1,0 +1,7 @@
+{
+  "extends": "../config-typescript/library.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
+  }
+}

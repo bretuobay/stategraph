@@ -201,9 +201,6 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@angular/compiler':
-        specifier: ^18.2.13
-        version: 18.2.14(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.14.10))
       '@angular/core':
         specifier: ^18.2.13
         version: 18.2.14(rxjs@7.8.2)(zone.js@0.14.10)
@@ -473,15 +470,6 @@ importers:
         version: 3.5.39(typescript@5.9.3)
 
 packages:
-
-  '@angular/compiler@18.2.14':
-    resolution: {integrity: sha512-Mpq3v/mztQzGAQAAFV+wAI1hlXxZ0m8eDBgaN2kD3Ue+r4S6bLm1Vlryw0iyUnt05PcFIdxPT6xkcphq5pl6lw==}
-    engines: {node: ^18.19.1 || ^20.11.1 || >=22.0.0}
-    peerDependencies:
-      '@angular/core': 18.2.14
-    peerDependenciesMeta:
-      '@angular/core':
-        optional: true
 
   '@angular/core@18.2.14':
     resolution: {integrity: sha512-BIPrCs93ZZTY9ym7yfoTgAQ5rs706yoYeAdrgc8kh/bDbM9DawxKlgeKBx2FLt09Y0YQ1bFhKVp0cV4gDEaMxQ==}
@@ -2630,12 +2618,6 @@ packages:
     resolution: {integrity: sha512-YGAhaO7J5ywOXW6InXNlLmfU194F8lVgu7bRntUF3TiG8Y3nBK0x1UJJuHUP/e8IyihkjCYqhCScpSwnlaSRkQ==}
 
 snapshots:
-
-  '@angular/compiler@18.2.14(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.14.10))':
-    dependencies:
-      tslib: 2.8.1
-    optionalDependencies:
-      '@angular/core': 18.2.14(rxjs@7.8.2)(zone.js@0.14.10)
 
   '@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.14.10)':
     dependencies:

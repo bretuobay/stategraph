@@ -1,11 +1,4 @@
-import {
-  DestroyRef,
-  Injectable,
-  InjectionToken,
-  inject,
-  type Provider,
-  type Signal,
-} from "@angular/core";
+import { DestroyRef, InjectionToken, inject, type Provider, type Signal } from "@angular/core";
 import { toSignal as observableToSignal, type ToSignalOptions } from "@angular/core/rxjs-interop";
 import { Observable, distinctUntilChanged, map } from "rxjs";
 import {
@@ -45,10 +38,12 @@ export type StateGraphToSignalOptions<TValue> = Omit<
   "initialValue" | "requireSync"
 >;
 
-@Injectable()
 export class ActorService<TMachine = StateGraphMachine<unknown, StateGraphEvent>> {
-  readonly actor = inject(STATEGRAPH_ACTOR) as ActorOf<TMachine>;
-  readonly snapshot$ = toObservable(this.actor);
+  readonly snapshot$: Observable<SnapshotOf<TMachine>>;
+
+  constructor(readonly actor: ActorOf<TMachine>) {
+    this.snapshot$ = toObservable(this.actor) as Observable<SnapshotOf<TMachine>>;
+  }
 
   send(event: EventOf<TMachine>): void {
     this.actor.send(event);
@@ -100,7 +95,10 @@ export function provideActor<TContext, TEvent extends StateGraphEvent>(
         return actor;
       },
     },
-    ActorService,
+    {
+      provide: ActorService,
+      useFactory: () => new ActorService(inject(STATEGRAPH_ACTOR)),
+    },
   ];
 }
 

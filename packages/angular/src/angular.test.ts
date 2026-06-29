@@ -1,4 +1,3 @@
-import "@angular/compiler";
 import {
   createEnvironmentInjector,
   inject,
